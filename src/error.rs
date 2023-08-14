@@ -7,6 +7,7 @@ use std::error;
 use std::fmt;
 use std::io;
 
+
 /// Helper trait for creating [`Error`][] instances.
 ///
 /// This trait is inspired by [`anyhow::Context`][].
@@ -73,23 +74,7 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match &self.kind {
-            ErrorKind::Internal => None,
-            ErrorKind::InvalidData => None,
-            ErrorKind::InvalidFont => None,
-            ErrorKind::PageSizeExceeded => None,
-            ErrorKind::UnsupportedEncoding => None,
-            ErrorKind::IoError(err) => Some(err),
-            ErrorKind::PdfError(err) => Some(err),
-            ErrorKind::PdfIndexError(err) => Some(err),
-            ErrorKind::RusttypeError(err) => Some(err),
-            #[cfg(feature = "images")]
-            ErrorKind::ImageError(err) => Some(err),
-        }
-    }
-}
+
 
 /// The kind of an [`Error`](struct.Error.html).
 #[derive(Debug)]
@@ -112,7 +97,7 @@ pub enum ErrorKind {
     /// An error caused by an invalid index in `printpdf`.
     PdfIndexError(printpdf::IndexError),
     /// An error caused by `rusttype`.
-    RusttypeError(rusttype::Error),
+    RusttypeError(owned_ttf_parser::FaceParsingError),
     /// An error caused by `image`.
     ///
     /// *Only available if the `images` feature is enabled.*
@@ -126,16 +111,7 @@ impl From<io::Error> for ErrorKind {
     }
 }
 
-impl From<printpdf::Error> for ErrorKind {
-    fn from(error: printpdf::Error) -> ErrorKind {
-        match error {
-            printpdf::Error::Io(err) => err.into(),
-            printpdf::Error::Rusttype(err) => err.into(),
-            printpdf::Error::Pdf(err) => err.into(),
-            printpdf::Error::Index(err) => err.into(),
-        }
-    }
-}
+
 
 impl From<printpdf::IndexError> for ErrorKind {
     fn from(error: printpdf::IndexError) -> ErrorKind {
@@ -149,9 +125,40 @@ impl From<printpdf::PdfError> for ErrorKind {
     }
 }
 
-impl From<rusttype::Error> for ErrorKind {
-    fn from(error: rusttype::Error) -> ErrorKind {
+impl From<owned_ttf_parser::FaceParsingError> for ErrorKind {
+    fn from(error: owned_ttf_parser::FaceParsingError) -> ErrorKind {
         ErrorKind::RusttypeError(error)
+    }
+}
+
+impl From<printpdf::Error> for ErrorKind {
+    fn from(error: printpdf::Error) -> ErrorKind {
+        match error {
+            printpdf::Error::Io(err) => err.into(),
+            printpdf::Error::FaceParsing(err) => err.into(),
+            printpdf::Error::Pdf(err) => err.into(),
+            printpdf::Error::Index(err) => err.into(),
+        }
+    }
+}
+
+
+
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match &self.kind {
+            ErrorKind::Internal => None,
+            ErrorKind::InvalidData => None,
+            ErrorKind::InvalidFont => None,
+            ErrorKind::PageSizeExceeded => None,
+            ErrorKind::UnsupportedEncoding => None,
+            ErrorKind::IoError(err) => Some(err),
+            ErrorKind::PdfError(err) => Some(err),
+            ErrorKind::PdfIndexError(err) => Some(err),
+            ErrorKind::RusttypeError(_) => None,
+            #[cfg(feature = "images")]
+            ErrorKind::ImageError(err) => Some(err),
+        }
     }
 }
 

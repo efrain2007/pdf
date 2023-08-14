@@ -4,8 +4,8 @@
 use genpdf::{elements, fonts, style, Element as _};
 
 const FONT_DIRS: &[&str] = &[
-    "/usr/share/fonts/liberation",
-    "/usr/share/fonts/truetype/liberation",
+    r"C:\archivos\font",
+    r"C:\archivos\font",
 ];
 const DEFAULT_FONT_NAME: &'static str = "LiberationSans";
 

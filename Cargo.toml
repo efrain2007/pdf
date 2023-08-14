@@ -5,7 +5,7 @@
 name = "genpdf"
 version = "0.2.0"
 authors = ["Robin Krahl <robin.krahl@ireas.org>"]
-edition = "2018"
+edition = "2021"
 description = "User-friendly PDF generator written in pure Rust"
 homepage = "https://sr.ht/~ireas/genpdf-rs"
 repository = "https://git.sr.ht/~ireas/genpdf-rs"
@@ -21,11 +21,12 @@ name = "images"
 required-features = ["images"]
 
 [dependencies]
-lopdf = "0.26"
-rusttype = "0.8"
+lopdf = "0.31.0"
+rusttype = "0.9.3"
+owned_ttf_parser = { version = "0.12", default-features = false }
 
 [dependencies.image]
-version = "0.23.12"
+version = "0.24.7"
 default-features = false
 optional = true
 
@@ -34,7 +35,7 @@ version = "0.8"
 optional = true
 
 [dependencies.printpdf]
-version = "0.3.4"
+version = "0.5.3"
 default-features = false
 
 [dependencies.derive_more]
@@ -43,7 +44,7 @@ default-features = false
 features = ["add", "add_assign", "from", "into", "mul", "mul_assign", "sum"]
 
 [dev-dependencies.float-cmp]
-version = "0.8"
+version = "0.9.0"
 default-features = false
 features = ["std"]
 
@@ -57,3 +58,4 @@ images = ["image", "printpdf/embedded_images"]
 
 [package.metadata.docs.rs]
 all-features = true
+

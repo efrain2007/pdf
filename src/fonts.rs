@@ -190,7 +190,8 @@ impl FontData {
         } else {
             RawFontData::Embedded(data.clone())
         };
-        let rt_font = rusttype::Font::from_bytes(data).context("Failed to read rusttype font")?;
+        //static DATA: &'static [u8] = "hello world";
+        let rt_font = rusttype::Font::try_from_vec(data).unwrap();
         if rt_font.units_per_em() == 0 {
             Err(Error::new(
                 "The font is not scalable",
