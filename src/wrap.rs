@@ -47,41 +47,48 @@ impl<'c, 's, I: Iterator<Item = style::StyledStr<'s>>> Iterator for Wrapper<'c, 
     type Item = (Vec<style::StyledCow<'s>>, usize);
 
     fn next(&mut self) -> Option<(Vec<style::StyledCow<'s>>, usize)> {
-        // Append words to self.buf until the maximum line length is reached
+        // Agregue palabras a self.buf hasta que se alcance la longitud máxima de línea
         while let Some(s) = self.iter.next() {
+            // println!("{:?}",s);
             let mut width = s.width(&self.context.font_cache);
-
+            // println!("primer {:?}",width);
             if self.x + width > self.width {
-                // The word does not fit into the current line (at least not completely)
+                // La palabra no cabe en la línea actual (al menos no completamente)
 
                 let mut delta = 0;
-                // Try to split the word so that the first part fits into the current line
+                // Intente dividir la palabra para que la primera parte quepa en la línea actual
                 let s = if let Some((start, end)) = split(self.context, s, self.width - self.x) {
-                    // Calculate the number of bytes that we added to the string when splitting it
-                    // (for the hyphen, if required).
+                    // Calcula la cantidad de bytes que agregamos a la cadena al dividirla
+                    // (para el guión, si es necesario).
                     delta = start.s.len() + end.s.len() - s.s.len();
                     self.buf.push(start);
                     width = end.width(&self.context.font_cache);
+                    println!("que fue{:}", s.s);
                     end
                 } else {
+                    println!("salto{:}", s.s);
                     s.into()
                 };
 
                 if width > self.width {
-                    // The remainder of the word is longer than the current page – we will never be
-                    // able to render it completely.
-                    // TODO: handle gracefully, emit warning
+                    //println!("{:?}",width);
+                    println!("entro en qiw{:?}", self.width);
+                    println!("paso wit{:}", s.s);
+                    // El resto de la palabra es más largo que la página actual: nunca seremos
+                    // capaz de hacerlo completamente.
+                    // TODO: manejar con gracia, emitir advertencia
                     self.has_overflowed = true;
-                    return None;
+                    // return None; se esta plainifacando aun
                 }
 
-                // Return the current line and add the word that did not fit to the next line
+                // Devuelve la línea actual y agrega la palabra que no encajaba en la línea siguiente
                 let v = std::mem::take(&mut self.buf);
+                println!("guadarndo{:?}", s.s);
                 self.buf.push(s);
                 self.x = width;
                 return Some((v, delta));
             } else {
-                // The word fits in the current line, so just append it
+                // La palabra cabe en la línea actual, así que simplemente agréguela
                 self.buf.push(s.into());
                 self.x += width;
             }
@@ -97,11 +104,70 @@ impl<'c, 's, I: Iterator<Item = style::StyledStr<'s>>> Iterator for Wrapper<'c, 
 
 #[cfg(not(feature = "hyphenation"))]
 fn split<'s>(
-    _context: &Context,
-    _s: style::StyledStr<'s>,
-    _len: Mm,
+    context: &Context,
+    s: style::StyledStr<'s>,
+    len: Mm,
 ) -> Option<(style::StyledCow<'s>, style::StyledCow<'s>)> {
-    None
+    //     println!("---len---{:?}", len);
+    //     let mut current_len = Mm(0.0);
+    //     let mut last_split_idx = None;
+    //     println!("------{:}", s.s);
+    //    // for (idx, ch) in s.s.char_indices() {
+
+    //         current_len += s.width(&context.font_cache);
+    //         println!("---current_len---{:?}", current_len);// Suponiendo que 'width' es una función válida para caracteres
+    //         if current_len > len {
+    //           //  break;
+    //         }
+    //         println!("---s.s.len()---{:?}", s.s.len());
+    //         let cure =  current_len.0  / 2.5;
+    //         println!("---cure---{:?}", cure);
+    //         let ssss = len.0 - cure   ;
+    //         println!("---ssss---{:?}", ssss);
+
+    //        // if ch.is_whitespace() || ch == '-' {
+    //             last_split_idx = Some(ssss.abs() as usize);
+
+    //       //  }
+    //    // }
+    //    println!("---last_split_idx---{:?}", last_split_idx);
+    //     if let Some(split_idx) = last_split_idx {
+    //         let (start, end) = s.s.split_at(split_idx);
+    //         Some((
+    //             style::StyledCow::new(start, s.style),
+    //             style::StyledCow::new(end, s.style),
+
+    //         ))
+    //     } else {
+    //         None
+    //     }
+
+    let mark = "";
+    let mark_width = s.style.str_width(&context.font_cache, mark);
+
+    let hyphenated = s.s;
+    let segments: Vec<_> = hyphenated.chars().collect();
+
+    // aqui se saca su indice
+    let idx = segments
+        .iter()
+        .scan(Mm(0.0), |acc, t| {
+            *acc += s.style.str_width(&context.font_cache, &t.to_string());
+            Some(*acc)
+        })
+        .position(|w| w + mark_width > len)
+        .unwrap_or_default();
+    if idx > 0 {
+        // let idx = hyphenated.char_indices().count();
+        let start = s.s[..idx].to_owned() + mark;
+        let end = &s.s[idx..];
+        Some((
+            style::StyledCow::new(start, s.style),
+            style::StyledCow::new(end, s.style),
+        ))
+    } else {
+        None
+    }
 }
 
 /// Tries to split the given string into two parts so that the first part is shorter than the given
@@ -176,10 +242,12 @@ impl<I: Iterator<Item = style::StyledString>> Iterator for Words<I> {
         }
 
         if let Some(s) = &mut self.s {
-            // Split at the first space or use the complete string
+            // Divida en el primer espacio o use la cadena completa
             let n = s.s.find(' ').map(|i| i + 1).unwrap_or_else(|| s.s.len());
             let mut tmp = s.s.split_off(n);
+
             mem::swap(&mut tmp, &mut s.s);
+
             Some(style::StyledString::new(tmp, s.style))
         } else {
             None

@@ -212,7 +212,7 @@ fn main() {
 
     doc.push(elements::Paragraph::new("Here is an example table:"));
 
-    let mut table = elements::TableLayout::new(vec![1, 2]);
+    let mut table = elements::TableLayout::new(vec![1.0, 2.0]);
     table.set_cell_decorator(elements::FrameCellDecorator::new(true, false, false));
     table
         .row()
@@ -269,7 +269,7 @@ fn main() {
         "Now let’s print a long table to demonstrate how page wrapping works:",
     ));
 
-    let mut table = elements::TableLayout::new(vec![1, 5]);
+    let mut table = elements::TableLayout::new(vec![1.0, 5.0]);
     table.set_cell_decorator(elements::FrameCellDecorator::new(true, true, false));
     table
         .row()

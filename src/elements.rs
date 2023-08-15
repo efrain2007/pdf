@@ -341,11 +341,12 @@ impl Element for Paragraph {
         }
 
         let words = self.words.iter().map(Into::into);
+       // println!("primero{:?}",words);
         let mut rendered_len = 0;
         let mut wrapper = wrap::Wrapper::new(words, context, area.size().width);
         for (line, delta) in &mut wrapper {
             let width = line.iter().map(|s| s.width(&context.font_cache)).sum();
-            // Calculate the maximum line height
+            // Calcular la altura máxima de la línea
             let metrics = line
                 .iter()
                 .map(|s| s.style.metrics(&context.font_cache))
@@ -369,13 +370,13 @@ impl Element for Paragraph {
         }
 
         if wrapper.has_overflowed() {
-            return Err(Error::new(
-                "Page overflowed while trying to wrap a string",
-                ErrorKind::PageSizeExceeded,
-            ));
+            // return Err(Error::new(
+            //     "Page overflowed while trying to wrap a string",
+            //     ErrorKind::PageSizeExceeded,
+            // ));
         }
 
-        // Remove the rendered data from self.words so that we don’t render it again on the next
+        // Elimine los datos renderizados de self.words para que no los volvamos a renderizar en el próximo
         // call to render.
         while rendered_len > 0 && !self.words.is_empty() {
             if self.words[0].s.len() <= rendered_len {
@@ -1393,7 +1394,7 @@ impl<'a, E: IntoBoxedElement> iter::Extend<E> for TableLayoutRow<'a> {
 /// [`CellDecorator`]: trait.CellDecorator.html
 /// [`FrameCellDecorator`]: struct.FrameCellDecorator.html
 pub struct TableLayout {
-    column_weights: Vec<usize>,
+    column_weights: Vec<f64>,
     rows: Vec<Vec<Box<dyn Element>>>,
     render_idx: usize,
     cell_decorator: Option<Box<dyn CellDecorator>>,
@@ -1404,7 +1405,7 @@ impl TableLayout {
     ///
     /// The column weights are used to determine the relative width of the columns.  The number of
     /// column weights determines the number of columns in the table.
-    pub fn new(column_weights: Vec<usize>) -> TableLayout {
+    pub fn new(column_weights: Vec<f64>) -> TableLayout {
         TableLayout {
             column_weights,
             rows: Vec::new(),

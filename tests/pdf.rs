@@ -7,7 +7,7 @@ const FONT_DIRS: &[&str] = &[
     r"C:\archivos\font",
     r"C:\archivos\font",
 ];
-const DEFAULT_FONT_NAME: &'static str = "LiberationSans";
+const DEFAULT_FONT_NAME: &'static str = "Roboto";
 
 const LOREM_IPSUM: &'static str =
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut \

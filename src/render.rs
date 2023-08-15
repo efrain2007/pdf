@@ -537,8 +537,8 @@ impl<'p> Area<'p> {
     /// The returned vector has the same number of elements as the provided slice.  The width of
     /// the *i*-th area is *width \* weights[i] / total_weight*, where *width* is the width of this
     /// area, and *total_weight* is the sum of all given weights.
-    pub fn split_horizontally(&self, weights: &[usize]) -> Vec<Area<'p>> {
-        let total_weight: usize = weights.iter().sum();
+    pub fn split_horizontally(&self, weights: &[f64]) -> Vec<Area<'p>> {
+        let total_weight: f64 = weights.iter().sum();
         let factor = self.size.width / total_weight as f64;
         let widths = weights.iter().map(|weight| factor * *weight as f64);
         let mut offset = Mm(0.0);
@@ -697,14 +697,14 @@ impl<'f, 'p> TextSection<'f, 'p> {
         }
     }
 
-    /// Prints the given string with the given style.
+    /// Imprime la cadena dada con el estilo dado.
     ///
-    /// The font cache for this text section must contain the PDF font for the given style.
+    /// El caché de fuentes para esta sección de texto debe contener la fuente PDF para el estilo dado.
     pub fn print_str(&mut self, s: impl AsRef<str>, style: Style) -> Result<(), Error> {
         let font = style.font(self.font_cache);
         let s = s.as_ref();
 
-        // Adjust cursor to remove left bearing of the first character of the first string
+        // Ajuste el cursor para eliminar el rumbo izquierdo del primer carácter de la primera cadena
         if self.is_first {
             let x_offset = if let Some(first_c) = s.chars().next() {
                 style.char_left_side_bearing(self.font_cache, first_c) * -1.0
